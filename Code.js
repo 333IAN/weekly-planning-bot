@@ -1,10 +1,14 @@
 function main() {
-  const tasksUrl = "https://your-tasks-page-url.com"; 
-  const recipient = "your-email@gmail.com";
+  // --- CONFIGURATION SECTION ---
+  // Paste the link to your specific tasks page here
+  const tasksUrl = "your-tasks-page-url" 
+  const recipient = "your-email.com";
+  // -----------------------------
 
   var today = new Date().getDay();
   var subject = "";
-  var htmlMessage="";
+  var htmlMessage = "";
+
   // Define the HTML template for the button
   // This creates a clean HTML link that looks like a button
   var buttonHtml = `<br><br>
@@ -55,13 +59,6 @@ function setWeeklyTriggers() {
       .nearMinute(30)
       .create();
   
-    ScriptApp.newTrigger('main')
-      .timeBased()
-      .everyWeeks(1)
-      .onWeekDay(ScriptApp.WeekDay.FRIDAY)
-      .atHour(19) // 7 PM
-      .nearMinute(0)
-      .create();
 
   // 3. Create the SUNDAY Trigger (Weekly)
   ScriptApp.newTrigger('main')
@@ -75,3 +72,29 @@ function setWeeklyTriggers() {
   Logger.log("Success! Triggers set for Friday and Sunday only.");
 }
 
+// This function listens for data sent from your website
+function doPost(e) {
+  try {
+    // 1. Parse the incoming data
+    var data = JSON.parse(e.postData.contents);
+    var taskName = data.task;
+    var taskTime = new Date(data.time);
+    
+    // 2. Create the Calendar Event
+    // The event lasts 30 minutes by default
+    var endTime = new Date(taskTime.getTime() + (30 * 60 * 1000));
+    
+    var event = CalendarApp.getDefaultCalendar().createEvent(taskName, taskTime, endTime);
+    
+    // 3. Add the 5-Minute Notification
+    event.addPopupReminder(5); // Notification 5 minutes before
+    
+    // 4. Return success message
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": error.toString()}))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
