@@ -3,206 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mission Control</title>
+    <title>Mission Control v2</title>
     <style>
-        /* --- CSS STYLES --- */
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-primary: #f1f5f9;
-            --text-secondary: #94a3b8;
-            --accent: #38bdf8;
-            --danger: #ef4444;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 800px;
-            margin-top: 50px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        h1 { font-weight: 300; font-size: 2.5rem; margin: 0; }
-        p { color: var(--text-secondary); margin-top: 10px; }
-
+        /* --- CSS --- */
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #38bdf8; --danger: #ef4444; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 800px; margin-top: 50px; }
+        h1 { text-align: center; font-weight: 300; margin-bottom: 30px; }
+        
         .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            background: var(--card-bg);
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex; gap: 10px; background: var(--card); padding: 15px;
+            border-radius: 10px; flex-wrap: wrap;
         }
+        
+        input[type="text"] { flex: 2; background: transparent; border: 1px solid #334155; color: white; padding: 10px; border-radius: 5px; }
+        
+        /* Input Styling */
+        input[type="datetime-local"] { flex: 1; background: #334155; border: none; color: white; padding: 10px; border-radius: 5px; color-scheme: dark; }
 
-        input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 1rem;
-            outline: none;
-            padding: 10px;
-        }
+        button#add-btn { background: var(--accent); border: none; padding: 10px 25px; border-radius: 5px; color: #0f172a; font-weight: bold; cursor: pointer; }
+        button#add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        button#add-btn {
-            background-color: var(--accent);
-            border: none;
-            padding: 10px 25px;
-            border-radius: 6px;
-            color: #0f172a;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        button#add-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
-        ul { list-style: none; padding: 0; }
-
-        li {
-            background-color: var(--card-bg);
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        li.completed span {
-            text-decoration: line-through;
-            color: var(--text-secondary);
-        }
-
-        .delete-btn {
-            background: transparent;
-            border: none;
-            color: var(--danger);
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        ul { list-style: none; padding: 0; margin-top: 20px; }
+        li { background: var(--card); margin-bottom: 10px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .status { font-size: 0.8rem; color: #94a3b8; margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <header>
-        <h1>Mission Control</h1>
-        <p>Focus. Execute. Review.</p>
-    </header>
+    <h1>Mission Control</h1>
 
     <div class="input-group">
-        <input type="text" id="task-input" placeholder="What needs to be done? (Press Enter)">
-        <button id="add-btn">Add Task</button>
+        <input type="text" id="task-input" placeholder="Task Name">
+        <input type="datetime-local" id="time-input">
+        <button id="add-btn">Sync to Cal</button>
     </div>
 
-    <ul id="task-list">
-        </ul>
+    <ul id="task-list"></ul>
 </div>
 
 <script>
-    /* --- JAVASCRIPT LOGIC --- */
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUtECPRyfAp3vbXQmFmiaQ0AquU0sFYg91JLtRZzIMZaexFRzGYq3DCd1wdAa2QrPE/exec"; 
+    // ---------------------
+
     const taskInput = document.getElementById('task-input');
+    const timeInput = document.getElementById('time-input');
     const addBtn = document.getElementById('add-btn');
     const taskList = document.getElementById('task-list');
 
-    // 1. Load tasks from LocalStorage on startup
-    document.addEventListener('DOMContentLoaded', loadTasks);
-
-    // 2. Add Task Logic
     addBtn.addEventListener('click', addTask);
-    taskInput.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter') addTask();
-    });
 
     function addTask() {
-        const text = taskInput.value;
-        if (text === '') return;
+        const taskText = taskInput.value;
+        const taskTime = timeInput.value;
 
-        createTaskElement(text);
-        saveLocal(text);
-        taskInput.value = '';
+        if (taskText === '' || taskTime === '') {
+            alert("Please enter both a task and a time.");
+            return;
+        }
+
+        // 1. Show visually immediately (Optimistic UI)
+        createTaskElement(taskText, "Syncing...");
+        addBtn.disabled = true; // Prevent double clicks
+        addBtn.innerText = "Sending...";
+
+        // 2. Send to Google Backend
+        fetch(GOOGLE_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors", // Essential for Google Apps Script
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task: taskText, time: taskTime })
+        })
+        .then(() => {
+            // Because of 'no-cors', we can't read the response, 
+            // but if we get here, the request was sent successfully.
+            updateLastTaskStatus("Synced ✅");
+            addBtn.disabled = false;
+            addBtn.innerText = "Sync to Cal";
+            
+            // Clear inputs
+            taskInput.value = '';
+            timeInput.value = '';
+        })
+        .catch(error => {
+            console.error(error);
+            updateLastTaskStatus("Error ❌");
+            addBtn.disabled = false;
+            addBtn.innerText = "Sync to Cal";
+        });
     }
 
-    // 3. Create HTML Elements
-    function createTaskElement(text) {
+    function createTaskElement(text, status) {
         const li = document.createElement('li');
-        
-        const span = document.createElement('span');
-        span.innerText = text;
-        span.addEventListener('click', () => {
-            li.classList.toggle('completed');
-        });
-
-        const delBtn = document.createElement('button');
-        delBtn.innerHTML = '&times;';
-        delBtn.classList.add('delete-btn');
-        delBtn.addEventListener('click', () => {
-            li.remove();
-            removeLocal(text);
-        });
-
-        li.appendChild(span);
-        li.appendChild(delBtn);
-        taskList.appendChild(li);
+        li.innerHTML = `<span>${text} <span class="status">${status}</span></span>`;
+        taskList.prepend(li);
     }
 
-    // 4. LocalStorage Functions (The "Database")
-    function saveLocal(task) {
-        let tasks;
-        if (localStorage.getItem('tasks') === null) {
-            tasks = [];
-        } else {
-            tasks = JSON.parse(localStorage.getItem('tasks'));
+    function updateLastTaskStatus(newStatus) {
+        const firstItem = taskList.firstElementChild;
+        if (firstItem) {
+            const statusSpan = firstItem.querySelector('.status');
+            statusSpan.innerText = newStatus;
         }
-        tasks.push(task);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-
-    function loadTasks() {
-        let tasks;
-        if (localStorage.getItem('tasks') === null) {
-            tasks = [];
-        } else {
-            tasks = JSON.parse(localStorage.getItem('tasks'));
-        }
-        tasks.forEach(function(task) {
-            createTaskElement(task);
-        });
-    }
-
-    function removeLocal(task) {
-        let tasks;
-        if (localStorage.getItem('tasks') === null) {
-            tasks = [];
-        } else {
-            tasks = JSON.parse(localStorage.getItem('tasks'));
-        }
-        const taskIndex = task.indexOf(task); // simple logic
-        tasks.splice(tasks.indexOf(task), 1);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
     }
 </script>
 
