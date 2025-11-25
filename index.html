@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mission Control v2</title>
     <style>
-        /* --- CSS --- */
+
         :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --accent: #38bdf8; --danger: #ef4444; }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; margin: 0; }
         .container { width: 90%; max-width: 800px; margin-top: 50px; }
@@ -18,7 +18,7 @@
         
         input[type="text"] { flex: 2; background: transparent; border: 1px solid #334155; color: white; padding: 10px; border-radius: 5px; }
         
-        /* Input Styling */
+
         input[type="datetime-local"] { flex: 1; background: #334155; border: none; color: white; padding: 10px; border-radius: 5px; color-scheme: dark; }
 
         button#add-btn { background: var(--accent); border: none; padding: 10px 25px; border-radius: 5px; color: #0f172a; font-weight: bold; cursor: pointer; }
@@ -43,9 +43,10 @@
     <ul id="task-list"></ul>
 </div>
 
+<script src="config.js"></script>
 <script>
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwUtECPRyfAp3vbXQmFmiaQ0AquU0sFYg91JLtRZzIMZaexFRzGYq3DCd1wdAa2QrPE/exec"; 
-    // ---------------------
+    const GOOGLE_SCRIPT_URL = CONFIG.GOOGLE_SCRIPT_URL; 
+
 
     const taskInput = document.getElementById('task-input');
     const timeInput = document.getElementById('time-input');
@@ -63,7 +64,6 @@
             return;
         }
 
-        // 1. Show visually immediately (Optimistic UI)
         createTaskElement(taskText, "Syncing...");
         addBtn.disabled = true; // Prevent double clicks
         addBtn.innerText = "Sending...";
@@ -76,13 +76,12 @@
             body: JSON.stringify({ task: taskText, time: taskTime })
         })
         .then(() => {
-            // Because of 'no-cors', we can't read the response, 
-            // but if we get here, the request was sent successfully.
+
             updateLastTaskStatus("Synced ✅");
             addBtn.disabled = false;
             addBtn.innerText = "Sync to Cal";
             
-            // Clear inputs
+
             taskInput.value = '';
             timeInput.value = '';
         })
