@@ -79,7 +79,7 @@ Whether you're a productivity enthusiast, project manager, or someone who strugg
    - Click **New Project**
 
 2. **Copy & paste the code from `Code.js`**
-   - Replace `amuguneisavwa@gmail.com` with your email
+   - Replace `your-email` with your email
    - Update `tasksUrl` with your preferred tasks page (or leave as-is)
 
 3. **Deploy as Web App**
