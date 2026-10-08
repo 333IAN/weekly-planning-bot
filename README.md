@@ -4,6 +4,8 @@
 
 ---
 
+![System architecture](/assets/weeklyplanning.png)
+
 ## 🎯 Overview
 
 **Mission Control** is a modern, zero-infrastructure task planning bot that seamlessly syncs your tasks with Google Calendar and delivers intelligent email reminders at strategic times. Built on Google Apps Script, it requires **no backend server**, **no database**, and operates entirely within the free tier of Google Services.
