@@ -45,8 +45,9 @@
 
 <script src="config.js"></script>
 <script>
-    const GOOGLE_SCRIPT_URL = CONFIG.GOOGLE_SCRIPT_URL; 
-
+    // Safe config access: if config.js is missing, don't break the page.
+    const GOOGLE_SCRIPT_URL = (typeof CONFIG !== 'undefined' && CONFIG.GOOGLE_SCRIPT_URL) ? CONFIG.GOOGLE_SCRIPT_URL : null;
+    const SYNC_ENABLED = !!GOOGLE_SCRIPT_URL;
 
     const taskInput = document.getElementById('task-input');
     const timeInput = document.getElementById('time-input');
@@ -64,9 +65,20 @@
             return;
         }
 
+        // Optimistic UI update
         createTaskElement(taskText, "Syncing...");
         addBtn.disabled = true; // Prevent double clicks
         addBtn.innerText = "Sending...";
+
+        // If sync URL is not configured, perform a local-only add and inform the user
+        if (!SYNC_ENABLED) {
+            updateLastTaskStatus("Local only — configure config.js to enable sync");
+            addBtn.disabled = false;
+            addBtn.innerText = "Sync to Cal";
+            taskInput.value = '';
+            timeInput.value = '';
+            return;
+        }
 
         // 2. Send to Google Backend
         fetch(GOOGLE_SCRIPT_URL, {
@@ -76,12 +88,13 @@
             body: JSON.stringify({ task: taskText, time: taskTime })
         })
         .then(() => {
-
+            // Because of 'no-cors', we can't read the response, 
+            // but if we get here, the request was sent successfully.
             updateLastTaskStatus("Synced ✅");
             addBtn.disabled = false;
             addBtn.innerText = "Sync to Cal";
             
-
+            // Clear inputs
             taskInput.value = '';
             timeInput.value = '';
         })

@@ -125,6 +125,7 @@ function setWeeklyTriggers() {
 }
 
 // This function listens for data sent from your website
+
 function doPost(e) {
   try {
     Logger.log("📨 doPost() called");
